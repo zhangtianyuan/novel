@@ -1,13 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>椋庢按甯堥檲鍧?/title>
+    <title>风水师陈坨 - 在线小说</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+            font-family: "Noto Serif SC", "Source Han Serif SC", "SimSun", "Microsoft YaHei", serif;
             background: #f5f0e8;
             color: #3a3a3a;
             line-height: 1.9;
@@ -93,6 +93,11 @@
             color: #999;
             padding: 60px 0;
         }
+        .error-msg {
+            text-align: center;
+            color: #c00;
+            padding: 40px 0;
+        }
         .last-updated {
             text-align: center;
             color: #aaa;
@@ -105,19 +110,19 @@
 </head>
 <body>
 <div class="container">
-    <h1>椋庢按甯堥檲鍧?/h1>
-    <p class="subtitle">涓€鍧楃綏鐩樿蛋琛椾覆宸凤紝涓€鏋氶摐閽卞墤闄嶅闀囩厼</p>
+    <h1>风水师陈坨</h1>
+    <p class="subtitle">一块罗盘走街串巷，一枚铜钱剑降妖镇煞</p>
 
     <div class="chapter-nav">
-        <button id="prevBtn" onclick="prevChapter()">鈫?涓婁竴绔?/button>
+        <button id="prevBtn" onclick="prevChapter()">← 上一章</button>
         <select id="chapterSelect" onchange="goToChapter()">
-            <option value="">閫夋嫨绔犺妭...</option>
+            <option value="">选择章节...</option>
         </select>
-        <button id="nextBtn" onclick="nextChapter()">涓嬩竴绔?鈫?/button>
+        <button id="nextBtn" onclick="nextChapter()">下一章 →</button>
     </div>
 
     <div class="chapter-content" id="chapterContent">
-        <div class="loading">鍔犺浇涓?..</div>
+        <div class="loading">加载中...</div>
     </div>
 
     <div class="last-updated" id="lastUpdated"></div>
@@ -127,80 +132,84 @@
     let chapters = [];
     let currentIndex = -1;
 
-    // 浠?GitHub raw 璇诲彇姝ｆ枃
-    const RAW_URL = 'https://raw.githubusercontent.com/zhangtianyuan/novel/master/姝ｆ枃.md';
+    // 使用 jsdelivr CDN 加速国内访问
+    const RAW_URL = 'https://cdn.jsdelivr.net/gh/zhangtianyuan/novel@master/正文.md';
 
     async function fetchChapters() {
         try {
             const resp = await fetch(RAW_URL + '?t=' + Date.now());
             const text = await resp.text();
-            // 鎸?## 绗?鍒嗗壊绔犺妭
-            const parts = text.split(/(?=## 绗?/);
-            chapters = parts.map((p, i) => ({
-                title: p.match(/## (.+)/)?.[1] || '鏍囬',
-                content: p.trim()
-            })).filter(c => c.content);
+            const parts = text.split(/(?=## 第)/);
+            chapters = parts.map(function(p, i) {
+                var title = p.match(/## (.+)/);
+                return {
+                    title: title ? title[1] : '标题',
+                    content: p.trim()
+                };
+            }).filter(function(c) { return c.content; });
 
-            const sel = document.getElementById('chapterSelect');
-            sel.innerHTML = '<option value="">閫夋嫨绔犺妭...</option>';
-            chapters.forEach((c, i) => {
-                const opt = document.createElement('option');
+            var sel = document.getElementById('chapterSelect');
+            sel.innerHTML = '<option value="">选择章节...</option>';
+            chapters.forEach(function(c, i) {
+                var opt = document.createElement('option');
                 opt.value = i;
                 opt.textContent = c.title;
                 sel.appendChild(opt);
             });
-
-            // 鎭㈠涓婃闃呰浣嶇疆
-            const saved = localStorage.getItem('lastChapter');
+            var saved = localStorage.getItem('lastChapter');
             if (saved && chapters[+saved]) {
                 showChapter(+saved);
             } else if (chapters.length > 0) {
-                showChapter(chapters.length - 1); // 榛樿鏈€鏂?            }
+                showChapter(chapters.length - 1);
+            }
         } catch (e) {
-            document.getElementById('chapterContent').innerHTML = '<p style="color:red;text-align:center;">鍔犺浇澶辫触锛岃绋嶅悗鍒锋柊閲嶈瘯</p>';
+            document.getElementById('chapterContent').innerHTML =
+                '<div class="error-msg">加载失败。可能是网络问题，请尝试以下方法：<br><br>' +
+                '1. 刷新页面重试<br>' +
+                '2. 或者直接访问 GitHub 仓库查看原文件：<br>' +
+                '<a href="https://github.com/zhangtianyuan/novel/blob/master/正文.md" target="_blank">' +
+                'https://github.com/zhangtianyuan/novel</a></div>';
         }
     }
 
     function renderMarkdown(text) {
-        // 绠€鏄撴覆鏌擄細鏍囬銆佹钀姐€佸紩鍙枫€佸垎鍓茬嚎
-        let html = '';
-        text.split('\n').forEach(line => {
-            line = line.trim();
-            if (!line) return;
+        var html = '';
+        var lines = text.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) continue;
             if (line.startsWith('## ')) {
-                html += `<h2>${line.replace('## ', '')}</h2>`;
+                html += '<h2>' + line.replace('## ', '') + '</h2>';
             } else if (line.startsWith('> ')) {
-                html += `<blockquote>${line.replace('> ', '')}</blockquote>`;
+                html += '<blockquote>' + line.replace('> ', '') + '</blockquote>';
             } else if (line === '---') {
                 html += '<hr>';
             } else if (line.startsWith('**') && line.endsWith('**')) {
-                html += `<p><strong>${line.replace(/\*\*/g, '')}</strong></p>`;
+                html += '<p><strong>' + line.replace(/\*\*/g, '') + '</strong></p>';
             } else {
-                // 澶勭悊瀵硅瘽涓殑寮曞彿
-                let processed = line
-                    .replace(/"/g, '銆?)
-                    .replace(/"/g, '銆?);
-                html += `<p>${processed}</p>`;
+                var processed = line.replace(/"/g, '\u201c').replace(/"/g, '\u201d');
+                html += '<p>' + processed + '</p>';
             }
-        });
+        }
         return html;
     }
 
     function showChapter(index) {
         if (index < 0 || index >= chapters.length) return;
         currentIndex = index;
-        const c = chapters[index];
-        const html = renderMarkdown(c.content);
+        var c = chapters[index];
+        var html = renderMarkdown(c.content);
         document.getElementById('chapterContent').innerHTML = html;
         document.getElementById('chapterSelect').value = index;
-        localStorage.setItem('lastChapter', index);
-        document.title = `${c.title} - 椋庢按甯堥檲鍧╜;
+        try { localStorage.setItem('lastChapter', index); } catch(e) {}
+        document.title = '\u98ce\u6c34\u5e08\u9648\u575f - ' + c.title;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        document.getElementById('lastUpdated').textContent = '鏈€鍚庢洿鏂帮細' + new Date().toLocaleString('zh-CN');
+        document.getElementById('lastUpdated').textContent =
+            '\u6700\u540e\u66f4\u65b0\uff1a' + new Date().toLocaleString('zh-CN');
     }
 
     function goToChapter() {
-        const val = document.getElementById('chapterSelect').value;
+        var val = document.getElementById('chapterSelect').value;
         if (val !== '') showChapter(parseInt(val));
     }
 
@@ -212,7 +221,7 @@
         if (currentIndex > 0) showChapter(currentIndex - 1);
     }
 
-    // 閿洏蹇嵎閿?    document.addEventListener('keydown', e => {
+    document.addEventListener('keydown', function(e) {
         if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextChapter(); }
         if (e.key === 'ArrowLeft') { e.preventDefault(); prevChapter(); }
     });
