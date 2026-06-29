@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>风水师陈坨</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+            background: #f5f0e8;
+            color: #3a3a3a;
+            line-height: 1.9;
+            font-size: 17px;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #2c2c2c;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+        .chapter-nav {
+            position: sticky;
+            top: 0;
+            background: #f5f0e8;
+            padding: 12px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .chapter-nav select {
+            padding: 6px 12px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+            font-family: inherit;
+            max-width: 280px;
+        }
+        .chapter-nav button {
+            padding: 6px 16px;
+            font-size: 14px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+        }
+        .chapter-nav button:hover {
+            background: #e8e0d0;
+        }
+        .chapter-content {
+            min-height: 60vh;
+        }
+        .chapter-content h2 {
+            font-size: 22px;
+            text-align: center;
+            margin: 30px 0 20px;
+            font-weight: 700;
+        }
+        .chapter-content p {
+            text-indent: 2em;
+            margin-bottom: 12px;
+        }
+        .chapter-content hr {
+            border: none;
+            border-top: 1px dashed #ccc;
+            margin: 30px 0;
+        }
+        .chapter-content blockquote {
+            border-left: 3px solid #c0a070;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #666;
+            font-style: italic;
+        }
+        .loading {
+            text-align: center;
+            color: #999;
+            padding: 60px 0;
+        }
+        .last-updated {
+            text-align: center;
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>风水师陈坨</h1>
+    <p class="subtitle">一块罗盘走街串巷，一枚铜钱剑降妖镇煞</p>
+
+    <div class="chapter-nav">
+        <button id="prevBtn" onclick="prevChapter()">← 上一章</button>
+        <select id="chapterSelect" onchange="goToChapter()">
+            <option value="">选择章节...</option>
+        </select>
+        <button id="nextBtn" onclick="nextChapter()">下一章 →</button>
+    </div>
+
+    <div class="chapter-content" id="chapterContent">
+        <div class="loading">加载中...</div>
+    </div>
+
+    <div class="last-updated" id="lastUpdated"></div>
+</div>
+
+<script>
+    let chapters = [];
+    let currentIndex = -1;
+
+    // 从 GitHub raw 读取正文
+    const RAW_URL = 'https://raw.githubusercontent.com/TomZhang/novel/main/正文.md';
+
+    async function fetchChapters() {
+        try {
+            const resp = await fetch(RAW_URL + '?t=' + Date.now());
+            const text = await resp.text();
+            // 按 ## 第 分割章节
+            const parts = text.split(/(?=## 第)/);
+            chapters = parts.map((p, i) => ({
+                title: p.match(/## (.+)/)?.[1] || '标题',
+                content: p.trim()
+            })).filter(c => c.content);
+
+            const sel = document.getElementById('chapterSelect');
+            sel.innerHTML = '<option value="">选择章节...</option>';
+            chapters.forEach((c, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = c.title;
+                sel.appendChild(opt);
+            });
+
+            // 恢复上次阅读位置
+            const saved = localStorage.getItem('lastChapter');
+            if (saved && chapters[+saved]) {
+                showChapter(+saved);
+            } else if (chapters.length > 0) {
+                showChapter(chapters.length - 1); // 默认最新
+            }
+        } catch (e) {
+            document.getElementById('chapterContent').innerHTML = '<p style="color:red;text-align:center;">加载失败，请稍后刷新重试</p>';
+        }
+    }
+
+    function renderMarkdown(text) {
+        // 简易渲染：标题、段落、引号、分割线
+        let html = '';
+        text.split('\n').forEach(line => {
+            line = line.trim();
+            if (!line) return;
+            if (line.startsWith('## ')) {
+                html += `<h2>${line.replace('## ', '')}</h2>`;
+            } else if (line.startsWith('> ')) {
+                html += `<blockquote>${line.replace('> ', '')}</blockquote>`;
+            } else if (line === '---') {
+                html += '<hr>';
+            } else if (line.startsWith('**') && line.endsWith('**')) {
+                html += `<p><strong>${line.replace(/\*\*/g, '')}</strong></p>`;
+            } else {
+                // 处理对话中的引号
+                let processed = line
+                    .replace(/"/g, '「')
+                    .replace(/"/g, '」');
+                html += `<p>${processed}</p>`;
+            }
+        });
+        return html;
+    }
+
+    function showChapter(index) {
+        if (index < 0 || index >= chapters.length) return;
+        currentIndex = index;
+        const c = chapters[index];
+        const html = renderMarkdown(c.content);
+        document.getElementById('chapterContent').innerHTML = html;
+        document.getElementById('chapterSelect').value = index;
+        localStorage.setItem('lastChapter', index);
+        document.title = `${c.title} - 风水师陈坨`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById('lastUpdated').textContent = '最后更新：' + new Date().toLocaleString('zh-CN');
+    }
+
+    function goToChapter() {
+        const val = document.getElementById('chapterSelect').value;
+        if (val !== '') showChapter(parseInt(val));
+    }
+
+    function nextChapter() {
+        if (currentIndex < chapters.length - 1) showChapter(currentIndex + 1);
+    }
+
+    function prevChapter() {
+        if (currentIndex > 0) showChapter(currentIndex - 1);
+    }
+
+    // 键盘快捷键
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextChapter(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prevChapter(); }
+    });
+
+    fetchChapters();
+</script>
+</body>
+</html>
