@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>风水师陈坨</title>
+    <title>椋庢按甯堥檲鍧?/title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -105,19 +105,19 @@
 </head>
 <body>
 <div class="container">
-    <h1>风水师陈坨</h1>
-    <p class="subtitle">一块罗盘走街串巷，一枚铜钱剑降妖镇煞</p>
+    <h1>椋庢按甯堥檲鍧?/h1>
+    <p class="subtitle">涓€鍧楃綏鐩樿蛋琛椾覆宸凤紝涓€鏋氶摐閽卞墤闄嶅闀囩厼</p>
 
     <div class="chapter-nav">
-        <button id="prevBtn" onclick="prevChapter()">← 上一章</button>
+        <button id="prevBtn" onclick="prevChapter()">鈫?涓婁竴绔?/button>
         <select id="chapterSelect" onchange="goToChapter()">
-            <option value="">选择章节...</option>
+            <option value="">閫夋嫨绔犺妭...</option>
         </select>
-        <button id="nextBtn" onclick="nextChapter()">下一章 →</button>
+        <button id="nextBtn" onclick="nextChapter()">涓嬩竴绔?鈫?/button>
     </div>
 
     <div class="chapter-content" id="chapterContent">
-        <div class="loading">加载中...</div>
+        <div class="loading">鍔犺浇涓?..</div>
     </div>
 
     <div class="last-updated" id="lastUpdated"></div>
@@ -127,22 +127,22 @@
     let chapters = [];
     let currentIndex = -1;
 
-    // 从 GitHub raw 读取正文
-    const RAW_URL = 'https://raw.githubusercontent.com/TomZhang/novel/main/正文.md';
+    // 浠?GitHub raw 璇诲彇姝ｆ枃
+    const RAW_URL = 'https://raw.githubusercontent.com/zhangtianyuan/novel/master/姝ｆ枃.md';
 
     async function fetchChapters() {
         try {
             const resp = await fetch(RAW_URL + '?t=' + Date.now());
             const text = await resp.text();
-            // 按 ## 第 分割章节
-            const parts = text.split(/(?=## 第)/);
+            // 鎸?## 绗?鍒嗗壊绔犺妭
+            const parts = text.split(/(?=## 绗?/);
             chapters = parts.map((p, i) => ({
-                title: p.match(/## (.+)/)?.[1] || '标题',
+                title: p.match(/## (.+)/)?.[1] || '鏍囬',
                 content: p.trim()
             })).filter(c => c.content);
 
             const sel = document.getElementById('chapterSelect');
-            sel.innerHTML = '<option value="">选择章节...</option>';
+            sel.innerHTML = '<option value="">閫夋嫨绔犺妭...</option>';
             chapters.forEach((c, i) => {
                 const opt = document.createElement('option');
                 opt.value = i;
@@ -150,20 +150,19 @@
                 sel.appendChild(opt);
             });
 
-            // 恢复上次阅读位置
+            // 鎭㈠涓婃闃呰浣嶇疆
             const saved = localStorage.getItem('lastChapter');
             if (saved && chapters[+saved]) {
                 showChapter(+saved);
             } else if (chapters.length > 0) {
-                showChapter(chapters.length - 1); // 默认最新
-            }
+                showChapter(chapters.length - 1); // 榛樿鏈€鏂?            }
         } catch (e) {
-            document.getElementById('chapterContent').innerHTML = '<p style="color:red;text-align:center;">加载失败，请稍后刷新重试</p>';
+            document.getElementById('chapterContent').innerHTML = '<p style="color:red;text-align:center;">鍔犺浇澶辫触锛岃绋嶅悗鍒锋柊閲嶈瘯</p>';
         }
     }
 
     function renderMarkdown(text) {
-        // 简易渲染：标题、段落、引号、分割线
+        // 绠€鏄撴覆鏌擄細鏍囬銆佹钀姐€佸紩鍙枫€佸垎鍓茬嚎
         let html = '';
         text.split('\n').forEach(line => {
             line = line.trim();
@@ -177,10 +176,10 @@
             } else if (line.startsWith('**') && line.endsWith('**')) {
                 html += `<p><strong>${line.replace(/\*\*/g, '')}</strong></p>`;
             } else {
-                // 处理对话中的引号
+                // 澶勭悊瀵硅瘽涓殑寮曞彿
                 let processed = line
-                    .replace(/"/g, '「')
-                    .replace(/"/g, '」');
+                    .replace(/"/g, '銆?)
+                    .replace(/"/g, '銆?);
                 html += `<p>${processed}</p>`;
             }
         });
@@ -195,9 +194,9 @@
         document.getElementById('chapterContent').innerHTML = html;
         document.getElementById('chapterSelect').value = index;
         localStorage.setItem('lastChapter', index);
-        document.title = `${c.title} - 风水师陈坨`;
+        document.title = `${c.title} - 椋庢按甯堥檲鍧╜;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        document.getElementById('lastUpdated').textContent = '最后更新：' + new Date().toLocaleString('zh-CN');
+        document.getElementById('lastUpdated').textContent = '鏈€鍚庢洿鏂帮細' + new Date().toLocaleString('zh-CN');
     }
 
     function goToChapter() {
@@ -213,8 +212,7 @@
         if (currentIndex > 0) showChapter(currentIndex - 1);
     }
 
-    // 键盘快捷键
-    document.addEventListener('keydown', e => {
+    // 閿洏蹇嵎閿?    document.addEventListener('keydown', e => {
         if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextChapter(); }
         if (e.key === 'ArrowLeft') { e.preventDefault(); prevChapter(); }
     });
